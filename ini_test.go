@@ -1,14 +1,13 @@
 package ini_test
 
 import (
-	"./_test/ini"
-	"os"
+	"ini"
 	"testing"
 )
 
 var (
 	dict ini.Dict
-	err  os.Error
+	err  error
 )
 
 func init() {
