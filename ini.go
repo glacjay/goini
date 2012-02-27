@@ -12,6 +12,8 @@ import (
 
 type Dict map[string]map[string]string
 
+type Error string
+
 var (
 	regDoubleQuote = regexp.MustCompile("^([^= \t]+)[ \t]*=[ \t]*\"([^\"]*)\"$")
 	regSingleQuote = regexp.MustCompile("^([^= \t]+)[ \t]*=[ \t]*'([^']*)'$")
@@ -19,7 +21,7 @@ var (
 	regNoValue     = regexp.MustCompile("^([^= \t]+)[ \t]*=[ \t]*([#;].*)?")
 )
 
-func Load(filename string) (dict Dict, err os.Error) {
+func Load(filename string) (dict Dict, err error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -54,15 +56,18 @@ func Load(filename string) (dict Dict, err os.Error) {
 
 		section, err = dict.parseLine(section, line)
 		if err != nil {
-			return nil, os.NewError(
-				err.String() + fmt.Sprintf("'%s:%d'.", filename, lineno))
+			return nil, newError(
+				err.Error() + fmt.Sprintf("'%s:%d'.", filename, lineno))
 		}
 	}
 
 	return
 }
 
-func (dict Dict) parseLine(section, line string) (string, os.Error) {
+func (e Error) Error() string {
+	return string(e)
+}
+func (dict Dict) parseLine(section, line string) (string, error) {
 	// commets
 	if line[0] == '#' || line[0] == ';' {
 		return section, nil
@@ -91,7 +96,7 @@ func (dict Dict) parseLine(section, line string) (string, os.Error) {
 		return section, nil
 	}
 
-	return section, os.NewError("iniparser: syntax error at ")
+	return section, newError("iniparser: syntax error at ")
 }
 
 func (dict Dict) add(section, key, value string) {
@@ -155,7 +160,7 @@ func (dict Dict) GetDouble(section, key string) (float64, bool) {
 	if !ok {
 		return 0, false
 	}
-	d, err := strconv.Atof64(value)
+	d, err := strconv.ParseFloat(value, 64)
 	if err != nil {
 		return 0, false
 	}
@@ -171,4 +176,8 @@ func (dict Dict) GetSections() []string {
 		i++
 	}
 	return sections
+}
+
+func newError(message string) (e error) {
+	return Error(message)
 }
