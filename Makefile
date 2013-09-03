@@ -1,7 +1,7 @@
-include $(GOROOT)/src/Make.inc
+test:
+	go test
 
-TARG=ini
-GOFILES= \
-	ini.go \
+format:
+	gofmt -w *.go
 
-include $(GOROOT)/src/Make.pkg
+.PHONY: format test
