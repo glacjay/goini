@@ -1,17 +1,16 @@
-package ini_test
+package ini
 
 import (
-	"ini"
 	"testing"
 )
 
 var (
-	dict ini.Dict
+	dict Dict
 	err  error
 )
 
 func init() {
-	dict, err = ini.Load("example.ini")
+	dict, err = Load("example.ini")
 }
 
 func TestLoad(t *testing.T) {
