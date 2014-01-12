@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -63,6 +64,11 @@ func Load(filename string) (dict Dict, err error) {
 	}
 
 	return
+}
+
+func Write(filename string, dict *Dict) error {
+	buffer := dict.format()
+	return ioutil.WriteFile(filename, buffer.Bytes(), 0644)
 }
 
 func (e Error) Error() string {
@@ -213,6 +219,10 @@ func (dict Dict) GetSections() []string {
 }
 
 func (dict Dict) String() string {
+	return (*dict.format()).String()
+}
+
+func (dict Dict) format() *bytes.Buffer {
 	var buffer bytes.Buffer
 	for section, vals := range dict {
 		if section != "" {
@@ -223,7 +233,7 @@ func (dict Dict) String() string {
 		}
 		buffer.WriteString("\n")
 	}
-	return buffer.String()
+	return &buffer
 }
 
 func newError(message string) (e error) {

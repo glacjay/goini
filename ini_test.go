@@ -1,6 +1,7 @@
 package ini
 
 import (
+	"io/ioutil"
 	"testing"
 )
 
@@ -30,6 +31,29 @@ func init() {
 func TestLoad(t *testing.T) {
 	if err != nil {
 		t.Error("Example: load error:", err)
+	}
+}
+
+func TestWrite(t *testing.T) {
+	d, err := Load("empty.ini")
+	if err != nil {
+		t.Error("Example: load error:", err)
+	}
+	d.SetString("", "key", "value")
+	tempFile, err := ioutil.TempFile("", "")
+	if err != nil {
+		t.Error("Write: Couldn't create temp file.", err)
+	}
+	err = Write(tempFile.Name(), &d)
+	if err != nil {
+		t.Error("Write: Couldn't write to temp config file.", err)
+	}
+	contents, err := ioutil.ReadFile(tempFile.Name())
+	if err != nil {
+		t.Error("Write: Couldn't read from the temp config file.", err)
+	}
+	if string(contents) != "key = value\n\n" {
+		t.Error("Write: Contents of the config file doesn't match the expected.")
 	}
 }
 
