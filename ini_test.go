@@ -4,6 +4,20 @@ import (
 	"testing"
 )
 
+const (
+	exampleStr = `key1 = true
+
+[section1]
+key1 = value2
+key2 = 5
+key3 = 1.3
+
+[section2]
+key1 = 5
+
+`
+)
+
 var (
 	dict Dict
 	err  error
@@ -57,6 +71,45 @@ func TestGetStringIntAndDouble(t *testing.T) {
 	}
 }
 
+func TestSetBoolAndStringAndIntAndDouble(t *testing.T) {
+	dict.SetBool("pizza", "ham", false)
+	b, found := dict.GetBool("pizza", "ham")
+	if !found || b {
+		t.Error("Example: bool set error for key ham of section pizza.")
+	}
+	dict.SetString("pizza", "ham", "no")
+	n, found := dict.GetString("pizza", "ham")
+	if !found || n != "no" {
+		t.Error("Example: string set error for key ham of section pizza.")
+	}
+	dict.SetInt("wine", "year", 1978)
+	i, found := dict.GetInt("wine", "year")
+	if !found || i != 1978 {
+		t.Error("Example: int set error for key year of section wine.")
+	}
+	dict.SetDouble("wine", "not-exists", 5.6)
+	d, found := dict.GetDouble("wine", "not-exists")
+	if !found || d != 5.6 {
+		t.Error("Example: float set error for not existing key for wine.")
+	}
+}
+
+func TestDelete(t *testing.T) {
+	d, err := Load("empty.ini")
+	if err != nil {
+		t.Error("Example: load error:", err)
+	}
+	d.SetString("pizza", "ham", "yes")
+	d.Delete("pizza", "ham")
+	_, found := d.GetString("pizza", "ham")
+	if found {
+		t.Error("Example: delete error for key ham of section pizza.")
+	}
+	if len(d.GetSections()) > 1 {
+		t.Error("Only a single section should exist after deletion.")
+	}
+}
+
 func TestGetNotExist(t *testing.T) {
 	_, found := dict.GetString("not", "exist")
 	if found {
@@ -73,5 +126,20 @@ func TestGetSections(t *testing.T) {
 		if section != "" && section != "pizza" && section != "wine" {
 			t.Errorf("Section '%s' should not be exist.", section)
 		}
+	}
+}
+
+func TestString(t *testing.T) {
+	d, err := Load("empty.ini")
+	if err != nil {
+		t.Error("Example: load error:", err)
+	}
+	d.SetBool("", "key1", true)
+	d.SetString("section1", "key1", "value2")
+	d.SetInt("section1", "key2", 5)
+	d.SetDouble("section1", "key3", 1.3)
+	d.SetDouble("section2", "key1", 5.0)
+	if d.String() != exampleStr {
+		t.Errorf("Dict cannot be stringified as expected.")
 	}
 }

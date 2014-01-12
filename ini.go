@@ -2,6 +2,7 @@ package ini
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"regexp"
@@ -123,6 +124,10 @@ func (dict Dict) GetBool(section, key string) (bool, bool) {
 	return false, false
 }
 
+func (dict Dict) SetBool(section, key string, value bool) {
+	dict.SetString(section, key, strconv.FormatBool(value))
+}
+
 func (dict Dict) GetString(section, key string) (string, bool) {
 	sec, ok := dict[section]
 	if !ok {
@@ -133,6 +138,14 @@ func (dict Dict) GetString(section, key string) (string, bool) {
 		return "", false
 	}
 	return value, true
+}
+
+func (dict Dict) SetString(section, key, value string) {
+	_, ok := dict[section]
+	if !ok {
+		dict[section] = make(map[string]string)
+	}
+	dict[section][key] = value
 }
 
 func (dict Dict) GetInt(section, key string) (int, bool) {
@@ -151,6 +164,10 @@ func (dict Dict) GetInt(section, key string) (int, bool) {
 	return i, true
 }
 
+func (dict Dict) SetInt(section, key string, value int) {
+	dict.SetString(section, key, strconv.FormatInt(int64(value), 10))
+}
+
 func (dict Dict) GetDouble(section, key string) (float64, bool) {
 	sec, ok := dict[section]
 	if !ok {
@@ -167,6 +184,23 @@ func (dict Dict) GetDouble(section, key string) (float64, bool) {
 	return d, true
 }
 
+func (dict Dict) SetDouble(section, key string, value float64) {
+	dict.SetString(section, key, strconv.FormatFloat(value, 'f', -1, 64))
+}
+
+func (dict Dict) Delete(section, key string) {
+	_, ok := dict[section]
+	if !ok {
+		return
+	}
+	delete(dict[section], key)
+	// If there are no items left in the section,
+	// delete the section.
+	if len(dict[section]) == 0 {
+		delete(dict, section)
+	}
+}
+
 func (dict Dict) GetSections() []string {
 	size := len(dict)
 	sections := make([]string, size)
@@ -176,6 +210,20 @@ func (dict Dict) GetSections() []string {
 		i++
 	}
 	return sections
+}
+
+func (dict Dict) String() string {
+	var buffer bytes.Buffer
+	for section, vals := range dict {
+		if section != "" {
+			buffer.WriteString(fmt.Sprintf("[%s]\n", section))
+		}
+		for key, val := range vals {
+			buffer.WriteString(fmt.Sprintf("%s = %s\n", key, val))
+		}
+		buffer.WriteString("\n")
+	}
+	return buffer.String()
 }
 
 func newError(message string) (e error) {
