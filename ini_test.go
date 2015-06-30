@@ -3,15 +3,14 @@ package ini
 import (
 	"io/ioutil"
 	"testing"
+	"fmt"
 )
 
 const (
 	exampleStr = `key1 = true
 
 [section1]
-key1 = value2
-key2 = 5
-key3 = 1.3
+%s
 
 [section2]
 key1 = 5
@@ -153,6 +152,16 @@ func TestGetSections(t *testing.T) {
 	}
 }
 
+var (
+        key_combinations = []string{
+	    "key1 = value2\nkey2 = 5\nkey3 = 1.3",
+	    "key1 = value2\nkey3 = 1.3\nkey2 = 5",
+	    "key2 = 5\nkey1 = value2\nkey3 = 1.3",
+	    "key2 = 5\nkey3=1.3\nkey1 = value2",
+	    "key3 = 1.3\nkey1 = value2\nkey2 = 5",
+	    "key3 = 1.3\nkey2 = 5\nkey1 = value2" }
+)
+
 func TestString(t *testing.T) {
 	d, err := Load("empty.ini")
 	if err != nil {
@@ -163,7 +172,13 @@ func TestString(t *testing.T) {
 	d.SetInt("section1", "key2", 5)
 	d.SetDouble("section1", "key3", 1.3)
 	d.SetDouble("section2", "key1", 5.0)
-	if d.String() != exampleStr {
+	var matched = false
+	for _, key := range key_combinations {
+	        if d.String() == fmt.Sprintf(exampleStr, key) {
+		        matched = true
+		}
+	}
+	if (!matched) {
 		t.Errorf("Dict cannot be stringified as expected.")
 	}
 }
