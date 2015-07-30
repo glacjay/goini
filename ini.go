@@ -244,10 +244,15 @@ func (dict Dict) String() string {
 
 func (dict Dict) format() *bytes.Buffer {
 	var buffer bytes.Buffer
+	for key, val := range dict[""] {
+		buffer.WriteString(fmt.Sprintf("%s = %s\n", key, val))
+	}
+	buffer.WriteString("\n")
 	for section, vals := range dict {
-		if section != "" {
-			buffer.WriteString(fmt.Sprintf("[%s]\n", section))
+		if section == "" {
+			continue
 		}
+		buffer.WriteString(fmt.Sprintf("[%s]\n", section))
 		for key, val := range vals {
 			buffer.WriteString(fmt.Sprintf("%s = %s\n", key, val))
 		}
