@@ -3,19 +3,8 @@ package ini
 import (
 	"io/ioutil"
 	"testing"
-	"fmt"
-)
-
-const (
-	exampleStr = `key1 = true
-
-[section1]
-%s
-
-[section2]
-key1 = 5
-
-`
+	"strings"
+	"bufio"
 )
 
 var (
@@ -152,16 +141,6 @@ func TestGetSections(t *testing.T) {
 	}
 }
 
-var (
-        key_combinations = []string{
-	    "key1 = value2\nkey2 = 5\nkey3 = 1.3",
-	    "key1 = value2\nkey3 = 1.3\nkey2 = 5",
-	    "key2 = 5\nkey1 = value2\nkey3 = 1.3",
-	    "key2 = 5\nkey3=1.3\nkey1 = value2",
-	    "key3 = 1.3\nkey1 = value2\nkey2 = 5",
-	    "key3 = 1.3\nkey2 = 5\nkey1 = value2" }
-)
-
 func TestString(t *testing.T) {
 	d, err := Load("empty.ini")
 	if err != nil {
@@ -172,13 +151,29 @@ func TestString(t *testing.T) {
 	d.SetInt("section1", "key2", 5)
 	d.SetDouble("section1", "key3", 1.3)
 	d.SetDouble("section2", "key1", 5.0)
-	var matched = false
-	for _, key := range key_combinations {
-	        if d.String() == fmt.Sprintf(exampleStr, key) {
-		        matched = true
-		}
+	reader := strings.NewReader(d.String())
+	d2, err := LoadReader(bufio.NewReader(reader))
+	if err != nil {
+		t.Error("Example: load error:", err)
 	}
-	if (!matched) {
-		t.Errorf("Dict cannot be stringified as expected.")
+	b, found := d2.GetBool("", "key1")
+	if !found || !b {
+		t.Errorf("Stringify failed for key1")
+	}
+	s, found := d2.GetString("section1", "key1")
+	if !found || s != "value2" {
+	        t.Error("Stringify failed for section1, key1")
+	}
+	i, found := d2.GetInt("section1", "key2")
+	if !found || i != 5 {
+	        t.Error("Stringify failed for section1, key2")
+	}
+	db, found := d2.GetDouble("section1", "key3")
+	if !found || db != 1.3 {
+	        t.Error("Stringify failed for section1, key3")
+	}
+	db, found = d2.GetDouble("section2", "key1")
+	if !found || db != 5.0 {
+	        t.Error("Stringify failed for section2, key1")
 	}
 }
